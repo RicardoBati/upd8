@@ -3,7 +3,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cliente;
-use Illuminate\Support\Facades\Validator;
+use App\Repository\ClienteRepository;
+use App\Validator\ClienteValidator;
 
 
 class ClienteController extends Controller
@@ -11,10 +12,13 @@ class ClienteController extends Controller
     // Mostra uma lista dos clientes
     public function index()
     {
-        //$clientes = [];
-        $query = Cliente::query();
-        $clientes = $query->get();
-        $clientes = $query->paginate(20); // Paginação
+        try {
+            $clienteRepository = new ClienteRepository;
+            $clientes = $clienteRepository->buscarTodosClientes();
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+
         return view('clientes.index', ['clientes' => $clientes]);
     }
 
@@ -27,38 +31,21 @@ class ClienteController extends Controller
     // Armazena um novo cliente no banco de dados
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'cpf' => 'required',
-            'nome' => 'required',
-            'data_nascimento' => 'required|date',
-            'sexo' => 'required',
-            'endereco' => 'required',
-            'estado' => 'required',
-            'cidade' => 'required',
-        ]);
+        $clienteValidator = new ClienteValidator;
+        $validarCampos = $clienteValidator->validarCamposObrigatorios($request);
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+        if ($validarCampos) {
+            return redirect()->back()->withErrors($validarCampos)->withInput();
         }
 
-        $cliente = new Cliente();
-        $cliente->cpf = $request->input('cpf');
-        $cliente->nome = $request->input('nome');
-        $cliente->data_nascimento = $request->input('data_nascimento');
-        $cliente->sexo = $request->input('sexo');
-        $cliente->endereco = $request->input('endereco');
-        $cliente->estado = $request->input('estado');
-        $cliente->cidade = $request->input('cidade');
-        $cliente->save();
+        try {
+            $clienteRepository = new ClienteRepository;
+            $clienteRepository->cadastrarCliente($request);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
 
         return redirect()->route('clientes.index')->with('success', 'Cliente cadastrado com sucesso.');
-    }
-
-    // Exibe um cliente específico
-    public function show($id)
-    {
-        $cliente = Cliente::findOrFail($id);
-        return view('clientes.show', ['cliente' => $cliente]);
     }
 
     // Exibe o formulário de edição de cliente
@@ -71,29 +58,19 @@ class ClienteController extends Controller
     // Atualiza um cliente no banco de dados
     public function update(Request $request, $id)
     {
-        $validator = Validator::make($request->all(), [
-            'cpf' => 'required',
-            'nome' => 'required',
-            'data_nascimento' => 'required|date',
-            'sexo' => 'required',
-            'endereco' => 'required',
-            'estado' => 'required',
-            'cidade' => 'required',
-        ]);
+        $clienteValidator = new ClienteValidator;
+        $validarCampos = $clienteValidator->validarCamposObrigatorios($request);
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+        if ($validarCampos) {
+            return redirect()->back()->withErrors($validarCampos)->withInput();
         }
-        
-        $cliente = Cliente::findOrFail($id);
-        $cliente->cpf = $request->input('cpf');
-        $cliente->nome = $request->input('nome');
-        $cliente->data_nascimento = $request->input('data_nascimento');
-        $cliente->sexo = $request->input('sexo');
-        $cliente->endereco = $request->input('endereco');
-        $cliente->estado = $request->input('estado');
-        $cliente->cidade = $request->input('cidade');
-        $cliente->save();
+
+        try {
+            $clienteRepository = new ClienteRepository;
+            $clienteRepository->atualizarCliente($request,$id);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
 
         return redirect()->route('clientes.index')->with('success', 'Cliente atualizado com sucesso.');
     }
@@ -101,47 +78,23 @@ class ClienteController extends Controller
     // Remove um cliente do banco de dados
     public function destroy($id)
     {
-        $cliente = Cliente::findOrFail($id);
-        $cliente->delete();
-
+        try {
+            $clienteRepository = new ClienteRepository;
+            $clienteRepository->deletarCliente($id);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
         return redirect()->route('clientes.index')->with('success', 'Cliente excluído com sucesso.');
     }
 
     public function pesquisar(Request $request)
     {
-        $query = Cliente::query();
-
-        if (!empty($_GET['cpf'])) {
-            $query->where('cpf', $request->input('cpf'));
+        try {
+            $clienteRepository = new ClienteRepository;
+            $clientes = $clienteRepository->filtrarClientes($request);
+        } catch (\Throwable $th) {
+            throw $th;
         }
-
-        if (!empty($_GET['nome'])) {
-            $query->where('nome', 'like', '%' . $request->input('nome') . '%');
-        }
-
-        if (!empty($_GET['data_nascimento'])) {
-            $query->where('data_nascimento', $request->input('data_nascimento'));
-        }
-
-        if (!empty($_GET['sexo'])) {
-            $query->where('sexo', $request->input('sexo'));
-        }
-
-        if (!empty($_GET['endereco'])) {
-            $query->where('endereco', $request->input('endereco'));
-        }
-
-        if (!empty($_GET['estado'])) {
-            $query->where('estado', $request->input('estado'));
-        }
-
-        if (!empty($_GET['cidade'])) {
-            $query->where('cidade', $request->input('cidade'));
-        }
-        
-        $clientes = $query->get();
-        $clientes = $query->paginate(20); // Paginação
-
         return view('clientes.index', ['clientes' => $clientes]);
     }
 
