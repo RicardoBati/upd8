@@ -3,6 +3,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cliente;
+use Illuminate\Support\Facades\Validator;
+
 
 class ClienteController extends Controller
 {
@@ -25,6 +27,20 @@ class ClienteController extends Controller
     // Armazena um novo cliente no banco de dados
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'cpf' => 'required',
+            'nome' => 'required',
+            'data_nascimento' => 'required|date',
+            'sexo' => 'required',
+            'endereco' => 'required',
+            'estado' => 'required',
+            'cidade' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
         $cliente = new Cliente();
         $cliente->cpf = $request->input('cpf');
         $cliente->nome = $request->input('nome');
@@ -55,6 +71,20 @@ class ClienteController extends Controller
     // Atualiza um cliente no banco de dados
     public function update(Request $request, $id)
     {
+        $validator = Validator::make($request->all(), [
+            'cpf' => 'required',
+            'nome' => 'required',
+            'data_nascimento' => 'required|date',
+            'sexo' => 'required',
+            'endereco' => 'required',
+            'estado' => 'required',
+            'cidade' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+        
         $cliente = Cliente::findOrFail($id);
         $cliente->cpf = $request->input('cpf');
         $cliente->nome = $request->input('nome');
