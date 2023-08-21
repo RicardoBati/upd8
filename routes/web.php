@@ -14,15 +14,14 @@ use App\Http\Controllers\ClienteController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
-Route::get('/clientes',                     [ClienteController::class  , 'index'])->name('clientes.index');
+Route::get('/',                             [ClienteController::class  , 'index'])->name('clientes.index');
 
 //Criação
 Route::GET('clientes/create',               [ClienteController::class  , 'create'])->name('clientes.create');
 Route::POST('clientes/create',              [ClienteController::class  , 'store'])->name('clientes.store');
 
 //Pesquisa
-Route::GET('/clientes/pesquisar',          [ClienteController::class  , 'pesquisar'])->name('clientes.pesquisar');
+Route::GET('/clientes/pesquisar',           [ClienteController::class  , 'pesquisar'])->name('clientes.pesquisar');
 
 //Edição
 Route::POST('clientes/{cliente}/edit',      [ClienteController::class  , 'update'])->name('clientes.update');
